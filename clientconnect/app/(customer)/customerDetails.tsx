@@ -110,12 +110,18 @@ useEffect(() => {
       <Text style={styles.contact}>{customer.contact}</Text>
 
       <Text style={styles.section}>Change Status</Text>
-      <Dropdown
-        data={statusOptions}
+      {/* <Dropdown
+        options={statusOptions}
         selectedValue={status}
         onValueChange={setStatus}
         placeholder="Select Status"
-      />
+      /> */}
+      <Dropdown
+  label="Select Status"
+  options={statusOptions}
+  selectedValue={status}
+  onValueChange={setStatus}
+/>
       <Button title="Update Status" onPress={handleStatusUpdate} />
 
       <Text style={styles.section}>Opportunities</Text>
@@ -127,12 +133,18 @@ useEffect(() => {
         value={opportunityName}
         onChangeText={setOpportunityName}
       />
-      <Dropdown
-        data={opportunityStatusOptions}
+      {/* <Dropdown
+        options={opportunityStatusOptions}
         selectedValue={opportunityStatus}
         onValueChange={setOpportunityStatus}
         placeholder="Select Opportunity Status"
-      />
+      /> */}
+      <Dropdown
+  label="Select Opportunity Status"
+  options={opportunityStatusOptions}
+  selectedValue={opportunityStatus}
+  onValueChange={setOpportunityStatus}
+/>
       {adding ? (
         <ActivityIndicator style={{ marginTop: 10 }} />
       ) : (
