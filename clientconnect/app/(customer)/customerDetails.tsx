@@ -49,10 +49,11 @@ const CustomerDetail = () => {
   const [status, setStatus] = useState('');
   const [opportunityName, setOpportunityName] = useState('');
   const [opportunityStatus, setOpportunityStatus] = useState('');
-  const [editingOpportunityId, setEditingOpportunityId] = useState(null);
+//   const [editingOpportunityId, setEditingOpportunityId] = useState(null);
   const [adding, setAdding] = useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [opportunityModalVisible, setOpportunityModalVisible] = useState(false);
+  const [editingOpportunityId, setEditingOpportunityId] = useState<string | null>(null);
 
   const fetchCustomer = async () => {
     try {
@@ -85,53 +86,56 @@ const CustomerDetail = () => {
     }
   };
 
-  const handleOpportunitySubmit = async () => {
-    if (!opportunityName || !opportunityStatus) {
-      Alert.alert('Validation Error', 'Please enter opportunity name and select status');
-      return;
+ const handleOpportunitySubmit = async () => {
+  if (!opportunityName || !opportunityStatus) {
+    Alert.alert('Validation Error', 'Please enter opportunity name and select status');
+    return;
+  }
+
+  try {
+    setAdding(true);
+    let updatedOpportunities;
+
+    if (editingOpportunityId) {
+      const updatedOpp = await updateOpportunityAPI(customer._id, editingOpportunityId, {
+        name: opportunityName,
+        status: opportunityStatus,
+      });
+
+      updatedOpportunities = customer.opportunities.map((opp) =>
+        opp._id?.toString() === editingOpportunityId ? updatedOpp : opp
+      );
+
+      Alert.alert('Success', 'Opportunity updated successfully');
+    } else {
+      const newOpp = await addOpportunityAPI(customer._id, {
+        name: opportunityName,
+        status: opportunityStatus,
+      });
+
+      updatedOpportunities = [...(customer.opportunities || []), newOpp];
+      Alert.alert('Success', 'Opportunity added successfully');
     }
 
-    try {
-      setAdding(true);
-      let updatedOpportunities;
+    setCustomer({ ...customer, opportunities: updatedOpportunities });
+    setOpportunityName('');
+    setOpportunityStatus('');
+    setEditingOpportunityId(null);
+    setOpportunityModalVisible(false);
+  } catch (error) {
+    Alert.alert('Error', error.message || 'Failed to submit opportunity');
+  } finally {
+    setAdding(false);
+  }
+};
+const handleEditOpportunity = (opp) => {
+  setOpportunityName(opp.name);
+  setOpportunityStatus(opp.status);
+  setEditingOpportunityId(opp._id?.toString()); // Use _id instead of id
+  console.log('Editing Opp ID:', opp._id?.toString());
+  setOpportunityModalVisible(true);
+};
 
-      if (editingOpportunityId) {
-        const updatedOpp = await updateOpportunityAPI(customer._id, editingOpportunityId, {
-          name: opportunityName,
-          status: opportunityStatus,
-        });
-
-        updatedOpportunities = customer.opportunities.map((opp) =>
-          opp.id === editingOpportunityId ? updatedOpp : opp
-        );
-        Alert.alert('Success', 'Opportunity updated successfully');
-      } else {
-        const newOpp = await addOpportunityAPI(customer._id, {
-          name: opportunityName,
-          status: opportunityStatus,
-        });
-        updatedOpportunities = [...(customer.opportunities || []), newOpp];
-        Alert.alert('Success', 'Opportunity added successfully');
-      }
-
-      setCustomer({ ...customer, opportunities: updatedOpportunities });
-      setOpportunityName('');
-      setOpportunityStatus('');
-      setEditingOpportunityId(null);
-      setOpportunityModalVisible(false);
-    } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to submit opportunity');
-    } finally {
-      setAdding(false);
-    }
-  };
-
-  const handleEditOpportunity = (opp) => {
-    setOpportunityName(opp.name);
-    setOpportunityStatus(opp.status);
-    setEditingOpportunityId(opp.id);
-    setOpportunityModalVisible(true);
-  };
 
   if (loading || !customer) {
     return (

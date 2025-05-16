@@ -28,3 +28,19 @@ export const addOpportunityAPI = async (
   const res = await axios.post(`${BASE_URL}/${customerId}/opportunities`, opportunity);
   return res.data;
 };
+
+export const updateOpportunityAPI = async (
+  customerId: string,
+  opportunityId: string,
+  updatedOpportunity: { name: string; status: string }
+) => {
+  console.log('API Request: Update opportunity:', opportunityId);
+  
+  const res = await axios.put(
+    `${BASE_URL}/${customerId}/opportunities/${opportunityId}`,
+    updatedOpportunity
+  );
+
+  return res.data;
+};
+
