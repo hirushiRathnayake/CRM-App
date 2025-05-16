@@ -1,126 +1,90 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-} from 'react-native';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, Alert, ActivityIndicator } from 'react-native';
+import Input from '../../components/common/input';
+import Button from '../../components/common/button';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../../redux/slices/authSlice';
+import type { RootState, AppDispatch } from '../../redux/store';
+import { validateLogin } from '../../utils/validation';
 
-export default function LoginScreen() {
-  const loginSchema = Yup.object().shape({
-    email: Yup.string().email('Invalid email').required('Email is required'),
-    password: Yup.string().min(6, 'Too short!').required('Password is required'),
-  });
+const Login = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error, user } = useSelector((state: RootState) => state.auth);
 
-  interface LoginFormValues {
-    email: string;
-    password: string;
-  }
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  const handleLogin = (values: LoginFormValues) => {
-    Alert.alert('Login Successful', `Welcome, ${values.email}`);
-    console.log(values);
+  // Validate form using centralized validation function
+  const validate = () => {
+    const validationErrors = validateLogin({ email, password });
+    setErrors(validationErrors);
+    return !Object.values(validationErrors).some(Boolean);
   };
 
+  const handleLogin = () => {
+    if (!validate()) return;
+    dispatch(loginUser({ email, password }));
+  };
+
+  // Alert on successful login
+  useEffect(() => {
+    if (user) {
+      Alert.alert('Login Success', `Welcome, ${user.email}`);
+      // TODO: Navigate to dashboard or home screen here
+    }
+  }, [user]);
+
+  // Alert on login error
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Login Failed', error);
+    }
+  }, [error]);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.container}
-      >
-        <Text style={styles.title}>Login</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Login</Text>
 
-        <Formik
-          initialValues={{ email: '', password: '' }}
-          validationSchema={loginSchema}
-          onSubmit={handleLogin}
-        >
-          {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
-            <>
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                onChangeText={handleChange('email')}
-                onBlur={handleBlur('email')}
-                value={values.email}
-              />
-              {touched.email && errors.email && (
-                <Text style={styles.error}>{errors.email}</Text>
-              )}
+      <Input
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        error={errors.email}
+      />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                secureTextEntry
-                autoCapitalize="none"
-                onChangeText={handleChange('password')}
-                onBlur={handleBlur('password')}
-                value={values.password}
-              />
-              {touched.password && errors.password && (
-                <Text style={styles.error}>{errors.password}</Text>
-              )}
+      <Input
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        error={errors.password}
+      />
 
-              <TouchableOpacity style={styles.button} onPress={() => handleSubmit()}>
-                <Text style={styles.buttonText}>Login</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </Formik>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" style={{ marginVertical: 20 }} />
+      ) : (
+        <Button title="Login" onPress={handleLogin} />
+      )}
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f2f2f2',
-  },
   container: {
     flex: 1,
+    padding: 24,
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    backgroundColor: '#fff',
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 32,
     textAlign: 'center',
-    marginBottom: 40,
-  },
-  input: {
-    backgroundColor: '#fff',
-    padding: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    marginBottom: 12,
-  },
-  error: {
-    color: 'red',
-    fontSize: 13,
-    marginBottom: 8,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
   },
 });
+
+export default Login;

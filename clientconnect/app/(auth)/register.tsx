@@ -1,215 +1,126 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  Alert,
-  ScrollView,
-} from 'react-native';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import Input from '../../components/common/input'
+import Button from '../../components/common/button';
+import { useDispatch, useSelector } from 'react-redux';
+import { registerUser } from '../../redux/slices/authSlice';
+import type { RootState, AppDispatch } from '../../redux/store';
+import { validateRegister } from '../../utils/validation';
 
-// Validation Schema
-const RegisterSchema = Yup.object().shape({
-  fullName: Yup.string().required('Full name is required'),
-  email: Yup.string().email('Invalid email').required('Email is required'),
-  phone: Yup.string()
-    .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits')
-    .required('Phone number is required'),
-  password: Yup.string().min(6, 'Minimum 6 characters').required('Password is required'),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password')], 'Passwords must match')
-    .required('Confirm your password'),
-});
+const Register = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error, user } = useSelector((state: RootState) => state.auth);
 
-const RegisterScreen = () => {
-  interface RegisterFormValues {
-    fullName: string;
-    email: string;
-    phone: string;
-    password: string;
-    confirmPassword: string;
-  }
-  
-  const handleRegister = (values: RegisterFormValues) => {
-    console.log(values);
-    Alert.alert('Registration Success', `Welcome, ${values.fullName}`);
-    // You can send data to your backend API here
+  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleRegister = () => {
+    const validationErrors = validateRegister({
+      username,
+      email,
+      password,
+      confirmPassword,
+      fullName,
+      phone,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setErrors({});
+    dispatch(registerUser({ username, fullName, email, phone, password }));
   };
 
+  useEffect(() => {
+    if (user) {
+      Alert.alert('Registration Success', `Welcome, ${user.username}`);
+      // Navigate to dashboard or login screen here if using navigation
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Registration Failed', error);
+    }
+  }, [error]);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.container}
-      >
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Create Account</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Register</Text>
 
-          <Formik
-            initialValues={{
-              fullName: '',
-              email: '',
-              phone: '',
-              password: '',
-              confirmPassword: '',
-            }}
-            validationSchema={RegisterSchema}
-            onSubmit={handleRegister}
-          >
-            {({
-              handleChange,
-              handleBlur,
-              handleSubmit,
-              values,
-              errors,
-              touched,
-            }) => (
-              <>
-                <InputField
-                  placeholder="Full Name"
-                  value={values.fullName}
-                  onChangeText={handleChange('fullName')}
-                  onBlur={handleBlur('fullName')}
-                  error={touched.fullName && errors.fullName}
-                />
+      <Input
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+        error={errors.username}
+        autoCapitalize="none"
+      />
+      <Input
+        placeholder="Full Name"
+        value={fullName}
+        onChangeText={setFullName}
+        error={errors.fullName}
+      />
+      <Input
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        error={errors.email}
+      />
+      <Input
+        placeholder="Phone (optional)"
+        value={phone}
+        onChangeText={setPhone}
+        keyboardType="phone-pad"
+        error={errors.phone}
+      />
+      <Input
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        error={errors.password}
+      />
+      <Input
+        placeholder="Confirm Password"
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry
+        error={errors.confirmPassword}
+      />
 
-                <InputField
-                  placeholder="Email"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={values.email}
-                  onChangeText={handleChange('email')}
-                  onBlur={handleBlur('email')}
-                  error={touched.email && errors.email}
-                />
-
-                <InputField
-                  placeholder="Phone Number"
-                  keyboardType="phone-pad"
-                  value={values.phone}
-                  onChangeText={handleChange('phone')}
-                  onBlur={handleBlur('phone')}
-                  error={touched.phone && errors.phone}
-                />
-
-                <InputField
-                  placeholder="Password"
-                  secureTextEntry
-                  value={values.password}
-                  onChangeText={handleChange('password')}
-                  onBlur={handleBlur('password')}
-                  error={touched.password && errors.password}
-                />
-
-                <InputField
-                  placeholder="Confirm Password"
-                  secureTextEntry
-                  value={values.confirmPassword}
-                  onChangeText={handleChange('confirmPassword')}
-                  onBlur={handleBlur('confirmPassword')}
-                  error={touched.confirmPassword && errors.confirmPassword}
-                />
-
-                <TouchableOpacity style={styles.button} onPress={() => handleSubmit()}>
-                  <Text style={styles.buttonText}>Register</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </Formik>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" style={{ marginVertical: 20 }} />
+      ) : (
+        <Button title="Register" onPress={handleRegister} />
+      )}
+    </ScrollView>
   );
 };
 
-// Reusable InputField component
-type InputFieldProps = {
-  placeholder: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  onBlur: (e: any) => void;
-  error?: string | false | undefined;
-  secureTextEntry?: boolean;
-  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-};
-
-const InputField: React.FC<InputFieldProps> = ({
-  placeholder,
-  value,
-  onChangeText,
-  onBlur,
-  error,
-  secureTextEntry = false,
-  keyboardType = 'default',
-  autoCapitalize = 'sentences',
-}) => (
-  <>
-    <TextInput
-      style={styles.input}
-      placeholder={placeholder}
-      secureTextEntry={secureTextEntry}
-      keyboardType={keyboardType}
-      autoCapitalize={autoCapitalize}
-      value={value}
-      onChangeText={onChangeText}
-      onBlur={onBlur}
-    />
-    {error && <Text style={styles.error}>{error}</Text>}
-  </>
-);
-
-export default RegisterScreen;
-
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f2f2f2',
-  },
   container: {
-    flex: 1,
-    paddingHorizontal: 24,
+    flexGrow: 1,
+    padding: 24,
     justifyContent: 'center',
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '700',
+    marginBottom: 32,
     textAlign: 'center',
-    marginBottom: 24,
-    marginTop: 32,
-  },
-  input: {
-    backgroundColor: '#fff',
-    padding: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    marginBottom: 10,
-  },
-  error: {
-    color: 'red',
-    fontSize: 12,
-    marginBottom: 8,
-    marginLeft: 4,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 50,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
   },
 });
+
+export default Register;

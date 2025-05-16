@@ -15,6 +15,8 @@ export default function Index() {
         <Text style={{ color: "blue" }}>Go to Lohgin</Text></Link>
         <Link href="/register">
         <Text style={{ color: "blue" }}>Go to reg</Text></Link>
+         <Link href="/customerList">
+        <Text style={{ color: "blue" }}>Go  reg</Text></Link>
     </View>
   );
 }
