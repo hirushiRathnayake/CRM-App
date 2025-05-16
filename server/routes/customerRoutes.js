@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Customer = require('../models/Customer');
 const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
+
 
 
 // ✅ GET all customers
@@ -44,17 +46,35 @@ router.post('/', async (req, res) => {
 
 // ✅ PUT update customer status
 router.put('/:id/status', async (req, res) => {
-  const { status } = req.body;
   try {
-    const customer = await Customer.findById(req.params.id);
-    if (!customer) return res.status(404).json({ error: 'Customer not found' });
-    customer.status = status;
-    await customer.save();
-    res.json(customer);
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    const id = req.params.id;           // This is the MongoDB _id as a string
+    const { status } = req.body;
+
+    // Validate id format first (optional but recommended)
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid ID format' });
+    }
+
+    // Find by MongoDB _id (ObjectId), convert string id to ObjectId
+    const updatedCustomer = await Customer.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedCustomer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    res.json(updatedCustomer);
+  } catch (error) {
+    console.error('Error updating customer status:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
+
+
+
 
 // ✅ POST new opportunity
 router.post('/:id/opportunities', async (req, res) => {

@@ -16,6 +16,7 @@ export const fetchCustomerByIdAPI = async (id: string) => {
 
 
 export const updateCustomerStatusAPI = async (id: string, status: string) => {
+     console.log('API Request: Fetch customer byghgh ID:', id);
   const res = await axios.put(`${BASE_URL}/${id}/status`, { status });
   return res.data;
 };

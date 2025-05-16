@@ -1,4 +1,6 @@
 const Customer = require('../models/Customer');
+const mongoose = require('mongoose');
+
 
 // Get all customers
 exports.getAllCustomers = async (req, res) => {

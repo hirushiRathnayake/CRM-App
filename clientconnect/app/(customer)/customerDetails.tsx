@@ -24,6 +24,8 @@ import Input from '../../components/common/input';
 import Button from '../../components/common/button';
 import Dropdown from '../../components/common/dropdown';
 import OpportunityList from '../../components/oppotunity/oppotunityList';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
 
 const statusOptions = ['Active', 'Inactive', 'Lead'];
 const opportunityStatusOptions = ['New', 'Closed Won', 'Closed Lost'];
@@ -73,7 +75,8 @@ const CustomerDetail = () => {
 
   const handleStatusUpdate = async () => {
     try {
-      const updated = await updateCustomerStatusAPI(customer.id, status);
+      const updated = await updateCustomerStatusAPI(customer._id, status);
+      console.log('Customer ID:', customer._id);
       setCustomer(updated);
       Alert.alert('Success', 'Customer status updated');
       setStatusModalVisible(false);
@@ -93,7 +96,7 @@ const CustomerDetail = () => {
       let updatedOpportunities;
 
       if (editingOpportunityId) {
-        const updatedOpp = await updateOpportunityAPI(customer.id, editingOpportunityId, {
+        const updatedOpp = await updateOpportunityAPI(customer._id, editingOpportunityId, {
           name: opportunityName,
           status: opportunityStatus,
         });
@@ -103,7 +106,7 @@ const CustomerDetail = () => {
         );
         Alert.alert('Success', 'Opportunity updated successfully');
       } else {
-        const newOpp = await addOpportunityAPI(customer.id, {
+        const newOpp = await addOpportunityAPI(customer._id, {
           name: opportunityName,
           status: opportunityStatus,
         });
@@ -146,15 +149,9 @@ const CustomerDetail = () => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-         <Image
-  source={
-    customer.picture
-      ? { uri: customer.picture }
-      : require('../../assets/images/avatar.jpg') // dummy avatar fallback image
-  }
-  style={styles.image}
-  resizeMode="cover"  // makes image nicely fit container
-/>
+        <View style={{ alignItems: 'center', marginBottom: 20 }}>
+  <Icon name="user-circle" size={100} color="#666" />
+</View>
           <Text style={styles.name}>{customer.name}</Text>
           <Text style={styles.contact}>{customer.contact}</Text>
 
