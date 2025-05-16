@@ -7,12 +7,18 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import {
   addOpportunityAPI,
   fetchCustomerByIdAPI,
   updateCustomerStatusAPI,
+  updateOpportunityAPI,
 } from '../../api/customerApi';
 import Input from '../../components/common/input';
 import Button from '../../components/common/button';
@@ -22,48 +28,61 @@ import OpportunityList from '../../components/oppotunity/oppotunityList';
 const statusOptions = ['Active', 'Inactive', 'Lead'];
 const opportunityStatusOptions = ['New', 'Closed Won', 'Closed Lost'];
 
+const PopupModal = ({ visible, title, children, onClose }) => (
+  <Modal visible={visible} transparent animationType="slide">
+    <View style={styles.modalContainer}>
+      <View style={styles.modalContent}>
+        <Text style={styles.modalTitle}>{title}</Text>
+        {children}
+        <Button title="Close" onPress={onClose} />
+      </View>
+    </View>
+  </Modal>
+);
+
 const CustomerDetail = () => {
-  const { customerId } = useLocalSearchParams<{ customerId: string }>();
+  const { customerId } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
-  const [customer, setCustomer] = useState<any>(null);
+  const [customer, setCustomer] = useState(null);
   const [status, setStatus] = useState('');
   const [opportunityName, setOpportunityName] = useState('');
   const [opportunityStatus, setOpportunityStatus] = useState('');
+  const [editingOpportunityId, setEditingOpportunityId] = useState(null);
   const [adding, setAdding] = useState(false);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [opportunityModalVisible, setOpportunityModalVisible] = useState(false);
 
   const fetchCustomer = async () => {
     try {
       setLoading(true);
-      const data = await fetchCustomerByIdAPI(customerId!);
+      const data = await fetchCustomerByIdAPI(customerId);
       setCustomer(data);
       setStatus(data.status);
-    } catch (error: any) {
+    } catch (error) {
       Alert.alert('Error', error.message || 'Failed to load customer data.');
     } finally {
       setLoading(false);
     }
   };
 
-// This must be added to load data when `customerId` is ready
-useEffect(() => {
-  if (customerId) {
-    fetchCustomer();
-  }
-}, [customerId]);
-
-
+  useEffect(() => {
+    if (customerId) {
+      fetchCustomer();
+    }
+  }, [customerId]);
 
   const handleStatusUpdate = async () => {
     try {
       const updated = await updateCustomerStatusAPI(customer.id, status);
       setCustomer(updated);
       Alert.alert('Success', 'Customer status updated');
-    } catch (error: any) {
+      setStatusModalVisible(false);
+    } catch (error) {
       Alert.alert('Error', error.message || 'Failed to update status');
     }
   };
 
-  const handleAddOpportunity = async () => {
+  const handleOpportunitySubmit = async () => {
     if (!opportunityName || !opportunityStatus) {
       Alert.alert('Validation Error', 'Please enter opportunity name and select status');
       return;
@@ -71,27 +90,45 @@ useEffect(() => {
 
     try {
       setAdding(true);
-      const newOpp = await addOpportunityAPI(customer.id, {
-        name: opportunityName,
-        status: opportunityStatus,
-      });
+      let updatedOpportunities;
 
-      setCustomer({
-        ...customer,
-        opportunities: [...(customer.opportunities || []), newOpp],
-      });
+      if (editingOpportunityId) {
+        const updatedOpp = await updateOpportunityAPI(customer.id, editingOpportunityId, {
+          name: opportunityName,
+          status: opportunityStatus,
+        });
 
+        updatedOpportunities = customer.opportunities.map((opp) =>
+          opp.id === editingOpportunityId ? updatedOpp : opp
+        );
+        Alert.alert('Success', 'Opportunity updated successfully');
+      } else {
+        const newOpp = await addOpportunityAPI(customer.id, {
+          name: opportunityName,
+          status: opportunityStatus,
+        });
+        updatedOpportunities = [...(customer.opportunities || []), newOpp];
+        Alert.alert('Success', 'Opportunity added successfully');
+      }
+
+      setCustomer({ ...customer, opportunities: updatedOpportunities });
       setOpportunityName('');
       setOpportunityStatus('');
-      Alert.alert('Success', 'Opportunity added successfully');
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to add opportunity');
+      setEditingOpportunityId(null);
+      setOpportunityModalVisible(false);
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to submit opportunity');
     } finally {
       setAdding(false);
     }
   };
 
-
+  const handleEditOpportunity = (opp) => {
+    setOpportunityName(opp.name);
+    setOpportunityStatus(opp.status);
+    setEditingOpportunityId(opp.id);
+    setOpportunityModalVisible(true);
+  };
 
   if (loading || !customer) {
     return (
@@ -102,63 +139,91 @@ useEffect(() => {
   }
 
   return (
-    <View contentContainerStyle={styles.container}>
-      {customer.picture && (
-        <Image source={{ uri: customer.picture }} style={styles.image} />
-      )}
-      <Text style={styles.name}>{customer.name}</Text>
-      <Text style={styles.contact}>{customer.contact}</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f5f7fa' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+      >
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          {customer.picture && (
+            <Image source={{ uri: customer.picture }} style={styles.image} />
+          )}
+          <Text style={styles.name}>{customer.name}</Text>
+          <Text style={styles.contact}>{customer.contact}</Text>
 
-      <Text style={styles.section}>Change Status</Text>
-      {/* <Dropdown
-        options={statusOptions}
-        selectedValue={status}
-        onValueChange={setStatus}
-        placeholder="Select Status"
-      /> */}
-      <Dropdown
-  label="Select Status"
-  options={statusOptions}
-  selectedValue={status}
-  onValueChange={setStatus}
-/>
-      <Button title="Update Status" onPress={handleStatusUpdate} />
+          <View style={styles.rowBetween}>
+            <Text style={styles.section}>Status: {status}</Text>
+            <TouchableOpacity onPress={() => setStatusModalVisible(true)}>
+              <Text style={styles.editText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
 
-      <Text style={styles.section}>Opportunities</Text>
-      <OpportunityList opportunities={customer.opportunities || []} />
+          <View style={styles.rowBetween}>
+            <Text style={styles.section}>Opportunities</Text>
+            <TouchableOpacity onPress={() => setOpportunityModalVisible(true)}>
+              <Text style={styles.editText}>+ Add</Text>
+            </TouchableOpacity>
+          </View>
 
-      <Text style={styles.section}>Add New Opportunity</Text>
-      <Input
-        placeholder="Opportunity Name"
-        value={opportunityName}
-        onChangeText={setOpportunityName}
-      />
-      {/* <Dropdown
-        options={opportunityStatusOptions}
-        selectedValue={opportunityStatus}
-        onValueChange={setOpportunityStatus}
-        placeholder="Select Opportunity Status"
-      /> */}
-      <Dropdown
-  label="Select Opportunity Status"
-  options={opportunityStatusOptions}
-  selectedValue={opportunityStatus}
-  onValueChange={setOpportunityStatus}
-/>
-      {adding ? (
-        <ActivityIndicator style={{ marginTop: 10 }} />
-      ) : (
-        <Button title="Add Opportunity" onPress={handleAddOpportunity} />
-      )}
-    </View>
+          <OpportunityList
+            opportunities={customer.opportunities || []}
+            onEdit={handleEditOpportunity}
+          />
+
+          {/* Status Modal */}
+          <PopupModal
+            visible={statusModalVisible}
+            title="Update Status"
+            onClose={() => setStatusModalVisible(false)}
+          >
+            <Dropdown
+              label="Select Status"
+              options={statusOptions}
+              selectedValue={status}
+              onValueChange={setStatus}
+            />
+            <Button title="Update" onPress={handleStatusUpdate} />
+          </PopupModal>
+
+          {/* Opportunity Modal */}
+          <PopupModal
+            visible={opportunityModalVisible}
+            title={editingOpportunityId ? 'Edit Opportunity' : 'Add Opportunity'}
+            onClose={() => {
+              setOpportunityModalVisible(false);
+              setOpportunityName('');
+              setOpportunityStatus('');
+              setEditingOpportunityId(null);
+            }}
+          >
+            <Input
+              placeholder="Opportunity Name"
+              value={opportunityName}
+              onChangeText={setOpportunityName}
+            />
+            <Dropdown
+              label="Select Opportunity Status"
+              options={opportunityStatusOptions}
+              selectedValue={opportunityStatus}
+              onValueChange={setOpportunityStatus}
+            />
+            <Button
+              title={editingOpportunityId ? 'Update' : 'Add'}
+              onPress={handleOpportunitySubmit}
+            />
+          </PopupModal>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    paddingBottom: 60,
-    backgroundColor: '#fff',
+    paddingBottom: 80,
+    backgroundColor: '#f5f7fa',
   },
   loader: {
     flex: 1,
@@ -175,16 +240,45 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     textAlign: 'center',
+    color: '#222',
   },
   contact: {
     textAlign: 'center',
-    color: '#555',
+    color: '#666',
     marginBottom: 20,
   },
   section: {
     fontSize: 18,
     fontWeight: '600',
-    marginVertical: 16,
+    color: '#333',
+  },
+  editText: {
+    color: '#007bff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 10,
+    color: '#333',
   },
 });
 
