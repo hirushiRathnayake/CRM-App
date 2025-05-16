@@ -34,7 +34,7 @@ const PopupModal = ({ visible, title, children, onClose }) => (
       <View style={styles.modalContent}>
         <Text style={styles.modalTitle}>{title}</Text>
         {children}
-        <Button title="Close" onPress={onClose} />
+        <Button title="Close" onPress={onClose} style={styles.closeButton} />
       </View>
     </View>
   </Modal>
@@ -133,31 +133,38 @@ const CustomerDetail = () => {
   if (loading || !customer) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#007AFF" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f5f7fa' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          {customer.picture && (
-            <Image source={{ uri: customer.picture }} style={styles.image} />
-          )}
+         <Image
+  source={
+    customer.picture
+      ? { uri: customer.picture }
+      : require('../../assets/images/avatar.jpg') // dummy avatar fallback image
+  }
+  style={styles.image}
+  resizeMode="cover"  // makes image nicely fit container
+/>
           <Text style={styles.name}>{customer.name}</Text>
           <Text style={styles.contact}>{customer.contact}</Text>
 
           <View style={styles.rowBetween}>
-            <Text style={styles.section}>Status: {status}</Text>
+            <Text style={styles.section}>Status</Text>
             <TouchableOpacity onPress={() => setStatusModalVisible(true)}>
               <Text style={styles.editText}>Edit</Text>
             </TouchableOpacity>
           </View>
+          <Text style={styles.statusValue}>{status}</Text>
 
           <View style={styles.rowBetween}>
             <Text style={styles.section}>Opportunities</Text>
@@ -221,65 +228,87 @@ const CustomerDetail = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 24,
     paddingBottom: 80,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: '#ffffff',
   },
   loader: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f2f2f2',
   },
   image: {
-    width: 100,
-    height: 100,
-    borderRadius: 60,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
     alignSelf: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#007AFF',
   },
   name: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: '700',
     textAlign: 'center',
-    color: '#222',
+    color: '#1c1c1e',
   },
   contact: {
     textAlign: 'center',
-    color: '#666',
-    marginBottom: 20,
+    color: '#8e8e93',
+    marginBottom: 24,
   },
   section: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
+    color: '#1c1c1e',
   },
   editText: {
-    color: '#007bff',
+    color: '#007AFF',
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 12,
+    marginBottom: 8,
+  },
+  statusValue: {
+    fontSize: 16,
+    color: '#1c1c1e',
+    marginBottom: 16,
+    marginLeft: 4,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',  // darker overlay
     padding: 20,
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
+    borderRadius: 16,
+    paddingVertical: 30,
+    paddingHorizontal: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 10,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '700',
-    marginBottom: 10,
-    color: '#333',
+    marginBottom: 20,
+    color: '#1c1c1e',
+    textAlign: 'center',
+  },
+  closeButton: {
+    marginTop: 20,
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    paddingVertical: 12,
   },
 });
-
 export default CustomerDetail;
