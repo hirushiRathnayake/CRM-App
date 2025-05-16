@@ -27,6 +27,7 @@ export const fetchCustomers = createAsyncThunk(
     try {
       const response = await fetchCustomersAPI();
       return response;
+       console.log(response);
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.message || 'Failed to fetch customers');
     }

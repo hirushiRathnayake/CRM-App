@@ -1,7 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+} from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { addOpportunityAPI, fetchCustomerByIdAPI, updateCustomerStatusAPI } from '../../api/customerApi';
+import {
+  addOpportunityAPI,
+  fetchCustomerByIdAPI,
+  updateCustomerStatusAPI,
+} from '../../api/customerApi';
 import Input from '../../components/common/input';
 import Button from '../../components/common/button';
 import Dropdown from '../../components/common/dropdown';
@@ -12,7 +24,6 @@ const opportunityStatusOptions = ['New', 'Closed Won', 'Closed Lost'];
 
 const CustomerDetail = () => {
   const { customerId } = useLocalSearchParams<{ customerId: string }>();
-
   const [loading, setLoading] = useState(true);
   const [customer, setCustomer] = useState<any>(null);
   const [status, setStatus] = useState('');
@@ -27,50 +38,60 @@ const CustomerDetail = () => {
       setCustomer(data);
       setStatus(data.status);
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message || 'Failed to load customer data.');
     } finally {
       setLoading(false);
     }
   };
 
+// This must be added to load data when `customerId` is ready
+useEffect(() => {
+  if (customerId) {
+    fetchCustomer();
+  }
+}, [customerId]);
+
+
+
   const handleStatusUpdate = async () => {
     try {
-      const updated = await updateCustomerStatusAPI(customer.id, status as any);
+      const updated = await updateCustomerStatusAPI(customer.id, status);
       setCustomer(updated);
-      Alert.alert('Success', 'Status updated');
+      Alert.alert('Success', 'Customer status updated');
     } catch (error: any) {
-      Alert.alert('Failed', error.message);
+      Alert.alert('Error', error.message || 'Failed to update status');
     }
   };
 
   const handleAddOpportunity = async () => {
     if (!opportunityName || !opportunityStatus) {
-      Alert.alert('Validation Error', 'Fill all opportunity fields');
+      Alert.alert('Validation Error', 'Please enter opportunity name and select status');
       return;
     }
+
     try {
       setAdding(true);
-      const newOpportunity = await addOpportunityAPI(customer.id, {
+      const newOpp = await addOpportunityAPI(customer.id, {
         name: opportunityName,
-        status: opportunityStatus as any,
+        status: opportunityStatus,
       });
+
       setCustomer({
         ...customer,
-        opportunities: [...(customer.opportunities || []), newOpportunity],
+        opportunities: [...(customer.opportunities || []), newOpp],
       });
+
       setOpportunityName('');
       setOpportunityStatus('');
-      Alert.alert('Success', 'Opportunity added');
+      Alert.alert('Success', 'Opportunity added successfully');
     } catch (error: any) {
-      Alert.alert('Failed', error.message);
+      Alert.alert('Error', error.message || 'Failed to add opportunity');
     } finally {
       setAdding(false);
     }
   };
 
-  useEffect(() => {
-    fetchCustomer();
-  }, []);
+
 
   if (loading || !customer) {
     return (
@@ -81,8 +102,10 @@ const CustomerDetail = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Image source={{ uri: customer.picture }} style={styles.image} />
+    <View contentContainerStyle={styles.container}>
+      {customer.picture && (
+        <Image source={{ uri: customer.picture }} style={styles.image} />
+      )}
       <Text style={styles.name}>{customer.name}</Text>
       <Text style={styles.contact}>{customer.contact}</Text>
 
@@ -108,14 +131,14 @@ const CustomerDetail = () => {
         data={opportunityStatusOptions}
         selectedValue={opportunityStatus}
         onValueChange={setOpportunityStatus}
-        placeholder="Select Status"
+        placeholder="Select Opportunity Status"
       />
       {adding ? (
-        <ActivityIndicator />
+        <ActivityIndicator style={{ marginTop: 10 }} />
       ) : (
         <Button title="Add Opportunity" onPress={handleAddOpportunity} />
       )}
-    </ScrollView>
+    </View>
   );
 };
 
