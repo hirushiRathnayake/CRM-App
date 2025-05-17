@@ -1,57 +1,56 @@
-const User = require('../models/users');
-const jwt = require('jsonwebtoken');
+import User from '../models/users'
+import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
+// Generate JWT
+const generateToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+};
 
-exports.register = async (req, res) => {
-  const { username, fullName, email, phone, password } = req.body;
-
+// @desc    Login user
+// @route   POST /api/auth/login
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
   try {
-    // Check if user or email already exists
-    if (await User.findOne({ username })) {
-      return res.status(400).json({ message: 'Username already taken' });
-    }
-    if (await User.findOne({ email })) {
-      return res.status(400).json({ message: 'Email already registered' });
+    const user = await User.findOne({ email });
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const newUser = new User({ username, fullName, email, phone, password });
-    await newUser.save();
-
-    res.status(201).json({ 
-      message: 'User registered successfully', 
-      user: { username: newUser.username, email: newUser.email }
+    res.json({
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+      },
+      token: generateToken(user._id),
     });
-  } catch (error) {
-    console.error('Register error:', error);
+  } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-exports.login = async (req, res) => {
-  const { email, password } = req.body;
+// @desc    Register user
+// @route   POST /api/auth/register
+export const registerUser = async (req, res) => {
+  const { email, password, name } = req.body;
 
   try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: 'Email already registered' });
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    const user = new User({ email, password, name });
+    await user.save();
 
-    const payload = { userId: user._id, username: user.username };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-
-    res.json({ 
-      token,
+    res.status(201).json({
       user: {
-        username: user.username,
+        _id: user._id,
         email: user.email,
-        fullName: user.fullName,
-        phone: user.phone,
-      }
+        name: user.name,
+      },
+      token: generateToken(user._id),
     });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+  } catch (err) {
+    res.status(500).json({ message: 'Registration failed' });
   }
 };
