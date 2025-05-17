@@ -23,6 +23,8 @@ export default function Index() {
         <Text style={{ color: "blue" }}>Goeg</Text></Link>
          <Link href="/filter">
         <Text style={{ color: "blue" }}>Gofgyjheg</Text></Link>
+           <Link href="/landingPage">
+        <Text style={{ color: "blue" }}>Gofgyjhvgeg</Text></Link>
     </View>
   );
 }
