@@ -63,7 +63,8 @@ const Dashboard = () => {
   return (
     <>
      <Header title="Dashboard" />
-    <ScrollView contentContainerStyle={styles.container}>
+  <ScrollView contentContainerStyle={[styles.container, { paddingBottom: 100 }]}>
+
        
       
 
@@ -123,6 +124,7 @@ const chartConfig = {
   strokeWidth: 2,
   barPercentage: 0.7,
   useShadowColorFromDataset: false,
+//   marginbottom: 0,
 };
 
 const styles = StyleSheet.create({

@@ -1,74 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, Alert, ActivityIndicator, ScrollView } from 'react-native';
-import Input from '../../components/common/input'
+import { View, Text, Alert, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import Input from '../../components/common/input';
 import Button from '../../components/common/button';
 import { useDispatch, useSelector } from 'react-redux';
-import { registerUser } from '../../redux/slices/authSlice';
 import type { RootState, AppDispatch } from '../../redux/store';
-import { validateRegister } from '../../utils/validation';
+import { useRouter } from 'expo-router';
+
+import { registerUserApi } from '../../api/loginApi';
+
+import {
+  registerStart,
+  registerSuccess,
+  registerFailure,
+  clearUser
+} from '../../redux/slices/authSlice';
 
 const Register = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+
   const { loading, error, user } = useSelector((state: RootState) => state.auth);
 
-  const [username, setUsername] = useState('');
-  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [registered, setRegistered] = useState(false);
 
-  const handleRegister = () => {
-    const validationErrors = validateRegister({
-      username,
-      email,
-      password,
-      confirmPassword,
-      fullName,
-      phone,
-    });
+  const validate = () => {
+    const validationErrors: { email?: string; password?: string; confirmPassword?: string } = {};
+    if (!email.includes('@')) validationErrors.email = 'Invalid email';
+    if (password.length < 6) validationErrors.password = 'Password too short';
+    if (password !== confirmPassword) validationErrors.confirmPassword = "Passwords don't match";
+    setErrors(validationErrors);
+    return Object.keys(validationErrors).length === 0;
+  };
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
+  const handleRegister = async () => {
+    if (!validate()) return;
+
+    dispatch(registerStart());
+
+    try {
+      const userData = await registerUserApi({ email, password });
+      dispatch(registerSuccess(userData));
+      setRegistered(true);
+    } catch (err: any) {
+      dispatch(registerFailure(err.response?.data?.message || err.message));
+      setRegistered(false);
     }
-
-    setErrors({});
-    dispatch(registerUser({ username, fullName, email, phone, password }));
   };
 
   useEffect(() => {
-    if (user) {
-      Alert.alert('Registration Success', `Welcome, ${user.username}`);
-      // Navigate to dashboard or login screen here if using navigation
+    if (user && registered) {
+      Alert.alert('Registration Success', `Welcome to ClientConnect`, [
+        {
+          text: 'OK',
+          onPress: () => {
+            setRegistered(false);
+            router.push('/login');
+            dispatch(clearUser());
+          },
+        },
+      ]);
     }
-  }, [user]);
+  }, [user, registered, dispatch, router]);
 
   useEffect(() => {
     if (error) {
       Alert.alert('Registration Failed', error);
+      setRegistered(false);
     }
   }, [error]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Register</Text>
 
-      <Input
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-        error={errors.username}
-        autoCapitalize="none"
-      />
-      <Input
-        placeholder="Full Name"
-        value={fullName}
-        onChangeText={setFullName}
-        error={errors.fullName}
-      />
       <Input
         placeholder="Email"
         value={email}
@@ -77,13 +86,7 @@ const Register = () => {
         autoCapitalize="none"
         error={errors.email}
       />
-      <Input
-        placeholder="Phone (optional)"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-        error={errors.phone}
-      />
+
       <Input
         placeholder="Password"
         value={password}
@@ -91,6 +94,7 @@ const Register = () => {
         secureTextEntry
         error={errors.password}
       />
+
       <Input
         placeholder="Confirm Password"
         value={confirmPassword}
@@ -100,18 +104,25 @@ const Register = () => {
       />
 
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" style={{ marginVertical: 20 }} />
+        <ActivityIndicator size="large" color="#007BFF" style={{ marginVertical: 20 }} />
       ) : (
         <Button title="Register" onPress={handleRegister} />
       )}
-    </ScrollView>
+
+      <View style={styles.loginContainer}>
+        <Text style={styles.loginText}>Already have an account? </Text>
+        <TouchableOpacity onPress={() => router.push('/login')}>
+          <Text style={styles.loginLink}>Login</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
     padding: 24,
+    flex: 1,
     justifyContent: 'center',
     backgroundColor: '#fff',
   },
@@ -120,6 +131,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 32,
     textAlign: 'center',
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  loginText: {
+    color: '#000',
+    fontSize: 16,
+  },
+  loginLink: {
+    color: '#007BFF',
+    fontSize: 16,
   },
 });
 

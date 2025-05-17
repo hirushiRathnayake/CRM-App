@@ -1,75 +1,73 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { loginUserAPI } from '../../api/loginApi';
-
-// Define types
-interface User {
-  _id: string;
-  email: string;
-  name?: string;
-  // Add more fields if needed
-}
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface AuthState {
-  user: User | null;
+  user: { email: string } | null;
   loading: boolean;
   error: string | null;
-  token: string | null;
 }
 
-// Initial state
 const initialState: AuthState = {
   user: null,
   loading: false,
   error: null,
-  token: null,
 };
 
-// Async thunk for login
-export const loginUser = createAsyncThunk<
-  { user: User; token: string },
-  { email: string; password: string },
-  { rejectValue: string }
->('auth/loginUser', async ({ email, password }, { rejectWithValue }) => {
-  try {
-    const response = await loginUserAPI(email, password);
-    return response; // should return { user, token }
-  } catch (error: any) {
-    return rejectWithValue(
-      error.response?.data?.message || 'Login failed. Please try again.'
-    );
-  }
-});
-
-// Slice
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    logout(state) {
-      state.user = null;
-      state.token = null;
+    loginStart(state) {
+      state.loading = true;
       state.error = null;
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(loginUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(loginUser.fulfilled, (state, action: PayloadAction<{ user: User; token: string }>) => {
-        state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.error = null;
-      })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || 'Unknown error';
-      });
+    loginSuccess(state, action: PayloadAction<{ email: string }>) {
+      state.loading = false;
+      state.user = action.payload;
+    },
+    loginFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    registerStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    registerSuccess(state, action: PayloadAction<{ email: string }>) {
+      state.loading = false;
+      state.user = action.payload;
+    },
+    registerFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    logout(state) {
+      state.user = null;
+      state.error = null;
+      state.loading = false;
+    },
+    clearError(state) {
+      state.error = null;
+    },
+    // inside createSlice reducers
+clearUser: (state) => {
+  state.user = null;
+  state.error = null;
+  state.loading = false;
+},
+
   },
 });
 
-// Export actions and reducer
-export const { logout } = authSlice.actions;
+export const {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+  registerStart,
+  registerSuccess,
+  registerFailure,
+  logout,
+  clearError,
+  clearUser
+} = authSlice.actions;
+
 export default authSlice.reducer;
