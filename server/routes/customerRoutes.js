@@ -95,52 +95,31 @@ router.post('/:id/opportunities', async (req, res) => {
 
 // Assuming you use Mongoose and have a Customer model
 
-router.put('/api/customers/:customerId/opportunities/:opportunityId', async (req, res) => {
-  const { customerId, opportunityId } = req.params;
+router.put('/:id/opportunities/:opportunityId', async (req, res) => {
+  const { id: customerId, opportunityId } = req.params;
   const { name, status } = req.body;
 
-  console.log('--- Incoming PUT Request ---');
-  console.log('Customer ID:', customerId);
-  console.log('Opportunity ID (from params):', opportunityId);
-  console.log('Request Body - Name:', name, '| Status:', status);
-
   try {
-    // Find the customer by _id
     const customer = await Customer.findById(customerId);
     if (!customer) {
-      console.log('Customer not found for ID:', customerId);
       return res.status(404).json({ message: 'Customer not found' });
     }
 
-    console.log('Customer found:', customer.name);
-
-    // Match opportunity by _id (MongoDB ObjectId)
-    const opportunity = customer.opportunities.find(
-      (op) => op._id.toString() === opportunityId
-    );
-
+    const opportunity = customer.opportunities.id(opportunityId);
     if (!opportunity) {
-      console.log('Opportunity not found in customer.opportunities with ID:', opportunityId);
       return res.status(404).json({ message: 'Opportunity not found' });
     }
 
-    console.log('Opportunity matched:', opportunity);
-
-    // Update opportunity fields
     if (name !== undefined) opportunity.name = name;
     if (status !== undefined) opportunity.status = status;
 
-    // Save the updated customer document
     await customer.save();
-
-    console.log('Opportunity updated and customer saved');
     res.json({ message: 'Opportunity updated successfully', opportunity });
-
   } catch (error) {
     console.error('Error updating opportunity:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-
 module.exports = router;
+

@@ -40,3 +40,28 @@ exports.addOpportunity = async (req, res) => {
   await customer.save();
   res.status(201).json(req.body);
 };
+
+// Update an existing opportunity for a customer
+exports.updateOpportunity = async (req, res) => {
+  const { id: customerId, opportunityId } = req.params;
+  const { name, status } = req.body;
+
+  try {
+    const customer = await Customer.findById(customerId);
+    if (!customer) return res.status(404).json({ message: 'Customer not found' });
+
+    // Find the opportunity in the customer's opportunities array
+    const opportunity = customer.opportunities.id(opportunityId);
+    if (!opportunity) return res.status(404).json({ message: 'Opportunity not found' });
+
+    // Update fields
+    if (name !== undefined) opportunity.name = name;
+    if (status !== undefined) opportunity.status = status;
+
+    await customer.save();
+    res.json({ message: 'Opportunity updated successfully', opportunity });
+  } catch (error) {
+    console.error('Error updating opportunity:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

@@ -34,13 +34,13 @@ export const updateOpportunityAPI = async (
   opportunityId: string,
   updatedOpportunity: { name: string; status: string }
 ) => {
-  console.log('API Request: Update opportunity:', opportunityId);
-  
   const res = await axios.put(
     `${BASE_URL}/${customerId}/opportunities/${opportunityId}`,
     updatedOpportunity
   );
 
-  return res.data;
+  // Return only the nested updated opportunity object
+  return res.data.opportunity;
 };
+
 
