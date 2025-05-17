@@ -1,5 +1,6 @@
 import { Link } from "expo-router";
 import { Text, View } from "react-native";
+import Header from '../../components/common/header';
 
 export default function Index() {
   return (
@@ -10,6 +11,7 @@ export default function Index() {
         alignItems: "center",
       }}
     >
+      
       <Text>welcome</Text>
       <Link href="/login">
         <Text style={{ color: "blue" }}>Go to Lohgin</Text></Link>
@@ -19,6 +21,8 @@ export default function Index() {
         <Text style={{ color: "blue" }}>Go  rgeg</Text></Link>
         <Link href="/dashboard">
         <Text style={{ color: "blue" }}>Goeg</Text></Link>
+         <Link href="/filter">
+        <Text style={{ color: "blue" }}>Gofgyjheg</Text></Link>
     </View>
   );
 }

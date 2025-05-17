@@ -25,6 +25,8 @@ import Button from '../../components/common/button';
 import Dropdown from '../../components/common/dropdown';
 import OpportunityList from '../../components/oppotunity/oppotunityList';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import Header from '../../components/common/header';
+import BottomNavBar from '@/components/common/bottomNavbar';
 
 
 const statusOptions = ['Active', 'Inactive', 'Lead'];
@@ -146,7 +148,10 @@ const handleEditOpportunity = (opp) => {
   }
 
   return (
+    <>
+     <Header title="Customers Details" />
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+     
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -223,7 +228,10 @@ const handleEditOpportunity = (opp) => {
           </PopupModal>
         </ScrollView>
       </KeyboardAvoidingView>
+      
     </SafeAreaView>
+    <BottomNavBar/>
+    </>
   );
 };
 

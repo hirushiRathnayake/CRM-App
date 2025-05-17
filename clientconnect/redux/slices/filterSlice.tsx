@@ -1,32 +1,30 @@
+// redux/slices/filterSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { CustomerStatus } from './customerSlice';
 
 interface FilterState {
-  statusFilter: CustomerStatus | 'All';
   searchQuery: string;
+  statusFilter: string;
+  opportunityType: string;
 }
 
 const initialState: FilterState = {
-  statusFilter: 'All',
   searchQuery: '',
+  statusFilter: 'All',
+  opportunityType: '',
 };
 
 const filterSlice = createSlice({
   name: 'filters',
   initialState,
   reducers: {
-    setStatusFilter(state, action: PayloadAction<CustomerStatus | 'All'>) {
-      state.statusFilter = action.payload;
+    setFilters(state, action: PayloadAction<FilterState>) {
+      return action.payload;
     },
-    setSearchQuery(state, action: PayloadAction<string>) {
-      state.searchQuery = action.payload;
-    },
-    resetFilters(state) {
-      state.statusFilter = 'All';
-      state.searchQuery = '';
+    resetFilters() {
+      return initialState;
     },
   },
 });
 
-export const { setStatusFilter, setSearchQuery, resetFilters } = filterSlice.actions;
+export const { setFilters, resetFilters } = filterSlice.actions;
 export default filterSlice.reducer;

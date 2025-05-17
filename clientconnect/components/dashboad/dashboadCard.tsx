@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 type SummaryCardProps = {
   title: string;
   value: string | number;
   backgroundColor?: string;
   textColor?: string;
+  icon?: React.ReactNode;
 };
 
 const SummaryCard: React.FC<SummaryCardProps> = ({
@@ -13,9 +15,11 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   value,
   backgroundColor = '#f5f5f5',
   textColor = '#333',
+  icon,
 }) => {
   return (
     <View style={[styles.card, { backgroundColor }]}>
+      {icon && <View style={styles.iconContainer}>{icon}</View>}
       <Text style={[styles.value, { color: textColor }]}>{value}</Text>
       <Text style={[styles.title, { color: textColor }]}>{title}</Text>
     </View>
@@ -34,6 +38,9 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 4,
+  },
+  iconContainer: {
+    marginBottom: 8,
   },
   value: {
     fontSize: 24,
