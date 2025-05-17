@@ -1,4 +1,3 @@
-// components/customer/CustomerDetailComponent.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import Dropdown from '../common/dropdown';

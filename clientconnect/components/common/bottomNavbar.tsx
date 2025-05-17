@@ -39,10 +39,7 @@ const BottomNavBar = () => {
         />
       </TouchableOpacity>
 
-      
 
-
-      {/* Add more buttons as needed */}
     </View>
   );
 };

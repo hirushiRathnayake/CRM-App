@@ -1,6 +1,5 @@
-// components/Header.tsx
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -11,6 +10,27 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ title, showBackButton = true }) => {
   const router = useRouter();
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Do you want to exit?',
+      [
+        {
+          text: 'No',
+          onPress: () => {},
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            router.replace('/register'); // navigate to login screen
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
 
   return (
     <View style={styles.headerContainer}>
@@ -24,8 +44,15 @@ const Header: React.FC<HeaderProps> = ({ title, showBackButton = true }) => {
         </TouchableOpacity>
       )}
       <Text style={styles.title}>{title}</Text>
-      {/* Empty view to balance flex */}
-      <View style={styles.backButton} />
+
+      {/* Logout button */}
+      <TouchableOpacity
+        onPress={handleLogout}
+        style={styles.logoutButton}
+        accessibilityLabel="Logout"
+      >
+        <Icon name="log-out-outline" size={24} color="#000" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -41,6 +68,11 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
   },
   backButton: {
+    width: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoutButton: {
     width: 40,
     justifyContent: 'center',
     alignItems: 'center',

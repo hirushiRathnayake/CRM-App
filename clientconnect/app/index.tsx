@@ -9,7 +9,7 @@ export default function Index() {
   useEffect(() => {
     const timeout = setTimeout(() => {
       router.replace('/landingPage'); // navigate after layout is mounted
-    }, 100); // short delay to let _layout mount
+    }, 100); 
 
     return () => clearTimeout(timeout);
   }, []);

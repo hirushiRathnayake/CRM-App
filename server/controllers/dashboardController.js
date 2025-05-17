@@ -1,6 +1,6 @@
 const Customer = require('../models/Customer');
 
-// Fetch dashboard summary data
+
 const getDashboardSummary = async (req, res) => {
   try {
     const customers = await Customer.find();

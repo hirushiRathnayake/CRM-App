@@ -47,7 +47,7 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      Alert.alert('Login Success', `Welcome, ${user.email}`);
+      Alert.alert('Login Success', `Welcome to ClientConnect`);
       router.push('/dashboard');
     }
   }, [user]);

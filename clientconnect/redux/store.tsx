@@ -3,7 +3,7 @@ import authReducer from './slices/authSlice';
 import customerReducer from './slices/customerSlice';
 import opportunityReducer from './slices/opportunitySlice';
 import filterReducer from './slices/filterSlice';
-import dashboardReducer from './slices/dashboardSlice'; // ✅ import dashboard slice
+import dashboardReducer from './slices/dashboardSlice'; 
 
 export const store = configureStore({
   reducer: {
@@ -11,7 +11,7 @@ export const store = configureStore({
     customers: customerReducer,
     opportunities: opportunityReducer,
     filters: filterReducer,
-    dashboard: dashboardReducer, // ✅ add to store
+    dashboard: dashboardReducer, // add to store
   },
 });
 

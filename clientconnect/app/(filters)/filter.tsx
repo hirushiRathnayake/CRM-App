@@ -1,4 +1,3 @@
-// screens/FilterScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -13,7 +12,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useDispatch } from 'react-redux';
 import { setFilters } from '../../redux/slices/filterSlice';
-import Header from '../../components/common/header'; // adjust path if needed
+import Header from '../../components/common/header'; 
 import BottomNavBar from '@/components/common/bottomNavbar';
 
 const FilterScreen = () => {
@@ -31,7 +30,7 @@ const FilterScreen = () => {
         opportunityType,
       })
     );
-    router.push('/customerList'); // your route to customer list screen
+    router.push('/customerList'); 
   };
 
   return (

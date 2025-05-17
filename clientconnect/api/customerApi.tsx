@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://192.168.0.100:5000/api/customers'; // Replace with ngrok if on physical device
+const BASE_URL = 'http://192.168.0.100:5000/api/customers'; 
 
 export const fetchCustomersAPI = async () => {
   const res = await axios.get(BASE_URL);
@@ -9,7 +9,7 @@ export const fetchCustomersAPI = async () => {
 };
 
 export const fetchCustomerByIdAPI = async (id: string) => {
-  console.log('API Request: Fetch customer by ID:', id); // ✅ Log
+  console.log('API Request: Fetch customer by ID:', id);
   const res = await axios.get(`${BASE_URL}/${id}`);
   return res.data;
 };
