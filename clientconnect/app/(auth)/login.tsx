@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  Alert,
+  ActivityIndicator,
+  TouchableOpacity,
+  StyleSheet,
+  ImageBackground,
+} from 'react-native';
 import Input from '../../components/common/input';
 import Button from '../../components/common/button';
 import { useDispatch, useSelector } from 'react-redux';
@@ -7,12 +15,7 @@ import type { RootState, AppDispatch } from '../../redux/store';
 import { useRouter } from 'expo-router';
 
 import { loginUserApi } from '../../api/loginApi';
-
-import {
-  loginStart,
-  loginSuccess,
-  loginFailure,
-} from '../../redux/slices/authSlice';
+import { loginStart, loginSuccess, loginFailure } from '../../redux/slices/authSlice';
 
 const Login = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -23,6 +26,8 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const backgroundImage = require('../../assets/images/background.jpg'); // ✅ Replace with full-screen background image
 
   const validate = () => {
     const validationErrors: { email?: string; password?: string } = {};
@@ -59,54 +64,61 @@ const Login = () => {
   }, [error]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
+      <View style={styles.overlay}>
+        <Text style={styles.title}>Login</Text>
 
-      <Input
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        error={errors.email}
-      />
+        <Input
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          error={errors.email}
+        />
 
-      <Input
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        error={errors.password}
-      />
+        <Input
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          error={errors.password}
+        />
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#007BFF" style={{ marginVertical: 20 }} />
-      ) : (
-        <Button title="Login" onPress={handleLogin} />
-      )}
+        {loading ? (
+          <ActivityIndicator size="large" color="#007BFF" style={{ marginVertical: 20 }} />
+        ) : (
+          <Button title="Login" onPress={handleLogin} />
+        )}
 
-      <View style={styles.registerContainer}>
-        <Text style={styles.registerText}>Don't have an account? </Text>
-        <TouchableOpacity onPress={() => router.push('/register')}>
-          <Text style={styles.registerLink}>Register</Text>
-        </TouchableOpacity>
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Don't have an account? </Text>
+          <TouchableOpacity onPress={() => router.push('/register')}>
+            <Text style={styles.registerLink}>Register</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 24,
+  background: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: '#fff',
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)', // Makes text readable over the background
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 32,
+    fontWeight: 'bold',
     marginBottom: 32,
     textAlign: 'center',
+    color: '#333',
   },
   registerContainer: {
     flexDirection: 'row',
@@ -114,12 +126,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   registerText: {
-    color: '#000',
     fontSize: 16,
+    color: '#333',
   },
   registerLink: {
-    color: '#007BFF',
     fontSize: 16,
+    color: '#007BFF',
+    fontWeight: '600',
   },
 });
 

@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  Alert,
+  ActivityIndicator,
+  TouchableOpacity,
+  StyleSheet,
+  ImageBackground,
+} from 'react-native';
 import Input from '../../components/common/input';
 import Button from '../../components/common/button';
 import { useDispatch, useSelector } from 'react-redux';
@@ -7,17 +15,17 @@ import type { RootState, AppDispatch } from '../../redux/store';
 import { useRouter } from 'expo-router';
 
 import { registerUserApi } from '../../api/loginApi';
-
 import {
   registerStart,
   registerSuccess,
   registerFailure,
-  clearUser
+  clearUser,
 } from '../../redux/slices/authSlice';
 
 const Register = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const backgroundImage = require('../../assets/images/background.jpg'); // ✅ Replace with full background image
 
   const { loading, error, user } = useSelector((state: RootState) => state.auth);
 
@@ -25,7 +33,6 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
-
   const [registered, setRegistered] = useState(false);
 
   const validate = () => {
@@ -41,7 +48,6 @@ const Register = () => {
     if (!validate()) return;
 
     dispatch(registerStart());
-
     try {
       const userData = await registerUserApi({ email, password });
       dispatch(registerSuccess(userData));
@@ -75,62 +81,69 @@ const Register = () => {
   }, [error]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Register</Text>
+    <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
+      <View style={styles.overlay}>
+        <Text style={styles.title}>Register</Text>
 
-      <Input
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        error={errors.email}
-      />
+        <Input
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          error={errors.email}
+        />
 
-      <Input
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        error={errors.password}
-      />
+        <Input
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          error={errors.password}
+        />
 
-      <Input
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        error={errors.confirmPassword}
-      />
+        <Input
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+          error={errors.confirmPassword}
+        />
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#007BFF" style={{ marginVertical: 20 }} />
-      ) : (
-        <Button title="Register" onPress={handleRegister} />
-      )}
+        {loading ? (
+          <ActivityIndicator size="large" color="#007BFF" style={{ marginVertical: 20 }} />
+        ) : (
+          <Button title="Register" onPress={handleRegister} />
+        )}
 
-      <View style={styles.loginContainer}>
-        <Text style={styles.loginText}>Already have an account? </Text>
-        <TouchableOpacity onPress={() => router.push('/login')}>
-          <Text style={styles.loginLink}>Login</Text>
-        </TouchableOpacity>
+        <View style={styles.loginContainer}>
+          <Text style={styles.loginText}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => router.push('/login')}>
+            <Text style={styles.loginLink}>Login</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 24,
+  background: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: '#fff',
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)', // translucent background to improve readability
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 32,
+    fontWeight: 'bold',
     marginBottom: 32,
     textAlign: 'center',
+    color: '#333',
   },
   loginContainer: {
     flexDirection: 'row',
@@ -138,12 +151,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   loginText: {
-    color: '#000',
     fontSize: 16,
+    color: '#333',
   },
   loginLink: {
-    color: '#007BFF',
     fontSize: 16,
+    color: '#007BFF',
+    fontWeight: '600',
   },
 });
 

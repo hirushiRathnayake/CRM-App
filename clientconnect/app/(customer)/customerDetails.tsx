@@ -100,9 +100,14 @@ const CustomerDetail = () => {
           status: opportunityStatus,
         });
 
-        updatedOpportunities = customer.opportunities.map((opp) =>
-          opp._id?.toString() === editingOpportunityId ? updatedOpp : opp
-        );
+        // updatedOpportunities = customer.opportunities.map((opp) =>
+        //   opp._id?.toString() === editingOpportunityId ? updatedOpp : opp
+        // );
+        updatedOpportunities = customer.opportunities.map((opp) => {
+  const oppIdStr = opp._id ? opp._id.toString() : '';
+  return oppIdStr === editingOpportunityId ? updatedOpp : opp;
+});
+
 
         Alert.alert('Success', 'Opportunity updated successfully');
       } else {
@@ -178,15 +183,25 @@ const CustomerDetail = () => {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
         >
           <FlatList
-            data={customer.opportunities || []}
-            keyExtractor={(item) => item._id.toString()}
-            ListHeaderComponent={renderHeader}
-            renderItem={({ item }) => (
-              <OpportunityList opportunities={[item]} onEdit={handleEditOpportunity} />
-            )}
-            contentContainerStyle={{ paddingBottom: 80 }}
-            keyboardShouldPersistTaps="handled"
-          />
+  data={customer.opportunities || []}
+  keyExtractor={(item, index) => {
+    const idStr = item._id?.toString();
+    if (!idStr) {
+      console.warn('Missing _id for opportunity at index', index, item);
+    }
+    return idStr || `opportunity-${index}`;
+  }}
+  ListHeaderComponent={renderHeader}
+  renderItem={({ item }) => (
+    <OpportunityList
+      opportunities={[item]}
+      onEdit={handleEditOpportunity}
+    />
+  )}
+  contentContainerStyle={{ paddingBottom: 80 }}
+  keyboardShouldPersistTaps="handled"
+/>
+
           <PopupModal
             visible={statusModalVisible}
             title="Update Status"
