@@ -3,15 +3,14 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   ActivityIndicator,
   Alert,
-  ScrollView,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   Modal,
   TouchableOpacity,
+  FlatList,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import {
@@ -27,7 +26,6 @@ import OpportunityList from '../../components/oppotunity/oppotunityList';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Header from '../../components/common/header';
 import BottomNavBar from '@/components/common/bottomNavbar';
-
 
 const statusOptions = ['Active', 'Inactive', 'Lead'];
 const opportunityStatusOptions = ['New', 'Closed Won', 'Closed Lost'];
@@ -51,7 +49,6 @@ const CustomerDetail = () => {
   const [status, setStatus] = useState('');
   const [opportunityName, setOpportunityName] = useState('');
   const [opportunityStatus, setOpportunityStatus] = useState('');
-//   const [editingOpportunityId, setEditingOpportunityId] = useState(null);
   const [adding, setAdding] = useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [opportunityModalVisible, setOpportunityModalVisible] = useState(false);
@@ -79,7 +76,6 @@ const CustomerDetail = () => {
   const handleStatusUpdate = async () => {
     try {
       const updated = await updateCustomerStatusAPI(customer._id, status);
-      console.log('Customer ID:', customer._id);
       setCustomer(updated);
       Alert.alert('Success', 'Customer status updated');
       setStatusModalVisible(false);
@@ -88,56 +84,55 @@ const CustomerDetail = () => {
     }
   };
 
- const handleOpportunitySubmit = async () => {
-  if (!opportunityName || !opportunityStatus) {
-    Alert.alert('Validation Error', 'Please enter opportunity name and select status');
-    return;
-  }
-
-  try {
-    setAdding(true);
-    let updatedOpportunities;
-
-    if (editingOpportunityId) {
-      const updatedOpp = await updateOpportunityAPI(customer._id, editingOpportunityId, {
-        name: opportunityName,
-        status: opportunityStatus,
-      });
-
-      updatedOpportunities = customer.opportunities.map((opp) =>
-        opp._id?.toString() === editingOpportunityId ? updatedOpp : opp
-      );
-
-      Alert.alert('Success', 'Opportunity updated successfully');
-    } else {
-      const newOpp = await addOpportunityAPI(customer._id, {
-        name: opportunityName,
-        status: opportunityStatus,
-      });
-
-      updatedOpportunities = [...(customer.opportunities || []), newOpp];
-      Alert.alert('Success', 'Opportunity added successfully');
+  const handleOpportunitySubmit = async () => {
+    if (!opportunityName || !opportunityStatus) {
+      Alert.alert('Validation Error', 'Please enter opportunity name and select status');
+      return;
     }
 
-    setCustomer({ ...customer, opportunities: updatedOpportunities });
-    setOpportunityName('');
-    setOpportunityStatus('');
-    setEditingOpportunityId(null);
-    setOpportunityModalVisible(false);
-  } catch (error) {
-    Alert.alert('Error', error.message || 'Failed to submit opportunity');
-  } finally {
-    setAdding(false);
-  }
-};
-const handleEditOpportunity = (opp) => {
-  setOpportunityName(opp.name);
-  setOpportunityStatus(opp.status);
-  setEditingOpportunityId(opp._id?.toString()); // Use _id instead of id
-  console.log('Editing Opp ID:', opp._id?.toString());
-  setOpportunityModalVisible(true);
-};
+    try {
+      setAdding(true);
+      let updatedOpportunities;
 
+      if (editingOpportunityId) {
+        const updatedOpp = await updateOpportunityAPI(customer._id, editingOpportunityId, {
+          name: opportunityName,
+          status: opportunityStatus,
+        });
+
+        updatedOpportunities = customer.opportunities.map((opp) =>
+          opp._id?.toString() === editingOpportunityId ? updatedOpp : opp
+        );
+
+        Alert.alert('Success', 'Opportunity updated successfully');
+      } else {
+        const newOpp = await addOpportunityAPI(customer._id, {
+          name: opportunityName,
+          status: opportunityStatus,
+        });
+
+        updatedOpportunities = [...(customer.opportunities || []), newOpp];
+        Alert.alert('Success', 'Opportunity added successfully');
+      }
+
+      setCustomer({ ...customer, opportunities: updatedOpportunities });
+      setOpportunityName('');
+      setOpportunityStatus('');
+      setEditingOpportunityId(null);
+      setOpportunityModalVisible(false);
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to submit opportunity');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleEditOpportunity = (opp) => {
+    setOpportunityName(opp.name);
+    setOpportunityStatus(opp.status);
+    setEditingOpportunityId(opp._id?.toString());
+    setOpportunityModalVisible(true);
+  };
 
   if (loading || !customer) {
     return (
@@ -147,44 +142,51 @@ const handleEditOpportunity = (opp) => {
     );
   }
 
+  // Render Header as a FlatList ListHeaderComponent
+  const renderHeader = () => (
+    <View style={styles.container}>
+      <View style={{ alignItems: 'center', marginBottom: 20 }}>
+        <Icon name="user-circle" size={100} color="#666" />
+      </View>
+      <Text style={styles.name}>{customer.name}</Text>
+      <Text style={styles.contact}>{customer.contact}</Text>
+
+      <View style={styles.rowBetween}>
+        <Text style={styles.section}>Status</Text>
+        <TouchableOpacity onPress={() => setStatusModalVisible(true)}>
+          <Text style={styles.editText}>Edit</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.statusValue}>{status}</Text>
+
+      <View style={styles.rowBetween}>
+        <Text style={styles.section}>Opportunities</Text>
+        <TouchableOpacity onPress={() => setOpportunityModalVisible(true)}>
+          <Text style={styles.editText}>+ Add</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <>
-     <Header title="Customers Details" />
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
-     
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
-      >
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <View style={{ alignItems: 'center', marginBottom: 20 }}>
-  <Icon name="user-circle" size={100} color="#666" />
-</View>
-          <Text style={styles.name}>{customer.name}</Text>
-          <Text style={styles.contact}>{customer.contact}</Text>
-
-          <View style={styles.rowBetween}>
-            <Text style={styles.section}>Status</Text>
-            <TouchableOpacity onPress={() => setStatusModalVisible(true)}>
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.statusValue}>{status}</Text>
-
-          <View style={styles.rowBetween}>
-            <Text style={styles.section}>Opportunities</Text>
-            <TouchableOpacity onPress={() => setOpportunityModalVisible(true)}>
-              <Text style={styles.editText}>+ Add</Text>
-            </TouchableOpacity>
-          </View>
-
-          <OpportunityList
-            opportunities={customer.opportunities || []}
-            onEdit={handleEditOpportunity}
+      <Header title="Customer Details" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+        >
+          <FlatList
+            data={customer.opportunities || []}
+            keyExtractor={(item) => item._id.toString()}
+            ListHeaderComponent={renderHeader}
+            renderItem={({ item }) => (
+              <OpportunityList opportunities={[item]} onEdit={handleEditOpportunity} />
+            )}
+            contentContainerStyle={{ paddingBottom: 80 }}
+            keyboardShouldPersistTaps="handled"
           />
-
-          {/* Status Modal */}
           <PopupModal
             visible={statusModalVisible}
             title="Update Status"
@@ -198,8 +200,6 @@ const handleEditOpportunity = (opp) => {
             />
             <Button title="Update" onPress={handleStatusUpdate} />
           </PopupModal>
-
-          {/* Opportunity Modal */}
           <PopupModal
             visible={opportunityModalVisible}
             title={editingOpportunityId ? 'Edit Opportunity' : 'Add Opportunity'}
@@ -224,13 +224,12 @@ const handleEditOpportunity = (opp) => {
             <Button
               title={editingOpportunityId ? 'Update' : 'Add'}
               onPress={handleOpportunitySubmit}
+              disabled={adding}
             />
           </PopupModal>
-        </ScrollView>
-      </KeyboardAvoidingView>
-      
-    </SafeAreaView>
-    <BottomNavBar/>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+      <BottomNavBar />
     </>
   );
 };
@@ -238,7 +237,6 @@ const handleEditOpportunity = (opp) => {
 const styles = StyleSheet.create({
   container: {
     padding: 24,
-    paddingBottom: 80,
     backgroundColor: '#ffffff',
   },
   loader: {
@@ -246,15 +244,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f2f2f2',
-  },
-  image: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    alignSelf: 'center',
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: '#007AFF',
   },
   name: {
     fontSize: 26,
@@ -292,7 +281,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',  // darker overlay
+    backgroundColor: 'rgba(0,0,0,0.6)',
     padding: 20,
   },
   modalContent: {
@@ -320,4 +309,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
 });
+
 export default CustomerDetail;
