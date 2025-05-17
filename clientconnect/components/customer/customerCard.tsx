@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 type Customer = {
   id: string;
@@ -30,12 +31,16 @@ const statusColors: Record<Customer['status'], string> = {
 const CustomerCard: React.FC<Props> = ({ customer, onPress }) => {
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
-      <Image
-        source={{
-          uri: customer.avatarUrl || 'https://via.placeholder.com/80',
-        }}
-        style={styles.avatar}
-      />
+      {customer.avatarUrl ? (
+        <Image
+          source={{ uri: customer.avatarUrl }}
+          style={styles.avatar}
+        />
+      ) : (
+        <View style={styles.iconContainer}>
+          <Icon name="user-circle" size={60} color="#ccc" />
+        </View>
+      )}
       <View style={styles.info}>
         <Text style={styles.name}>{customer.name}</Text>
         <Text style={styles.contact}>{customer.email}</Text>
@@ -75,6 +80,15 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     marginRight: 14,
     backgroundColor: '#ddd',
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#eee',
   },
   info: {
     flex: 1,
