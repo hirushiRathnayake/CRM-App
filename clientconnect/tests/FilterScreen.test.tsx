@@ -23,7 +23,7 @@ describe('FilterScreen', () => {
     store = mockStore({});
     store.dispatch = jest.fn();
 
-    // Need to import again because useRouter mock returns a new mock each time
+   
     const useRouter = require('expo-router').useRouter;
     router = useRouter();
 

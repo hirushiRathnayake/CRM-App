@@ -27,8 +27,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  const backgroundImage = require('../../assets/images/background.jpg'); // ✅ Replace with full-screen background image
-
+  const backgroundImage = require('../../assets/images/background.jpg'); 
   const validate = () => {
     const validationErrors: { email?: string; password?: string } = {};
     if (!email.includes('@')) validationErrors.email = 'Invalid email';
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)', // Makes text readable over the background
+    backgroundColor: 'rgba(255, 255, 255, 0.85)', 
   },
   title: {
     fontSize: 32,

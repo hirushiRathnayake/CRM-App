@@ -25,7 +25,7 @@ import {
 const Register = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const backgroundImage = require('../../assets/images/background.jpg'); // ✅ Replace with full background image
+  const backgroundImage = require('../../assets/images/background.jpg'); 
 
   const { loading, error, user } = useSelector((state: RootState) => state.auth);
 
